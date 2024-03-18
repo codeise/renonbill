@@ -1,0 +1,153 @@
+{
+  "pub_rating": {
+    "weight_values": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    "min_values": {
+      "1": 5,
+      "2": 0,
+      "3": 7,
+      "4": 20,
+      "5": 10,
+      "6": 15,
+      "7": 5
+    },
+    "max_values": {
+      "1": 60,
+      "2": 10000,
+      "3": 15,
+      "4": 7,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    "exp_values": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    "cb_values": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    "rating_values": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    "score_1": 0,
+    "score_2": 0
+  },
+  "investment_values": {
+    "loan_check": false,
+    "loan_amount": 65,
+    "loan_refund_years": 10,
+    "loan_rate": 3,
+    "bonus_check": false,
+    "bonus_amount": 80,
+    "bonus_refund_years": 10,
+    "total_cost": 0,
+    "total_cost_loan": 0
+  },
+  "total_costifissi_values": {
+    "total_current_fuel_energy": 0,
+    "total_planned_fuel_energy": 0,
+    "total_saved_fuel_energy": 0,
+    "total_current_electric_energy": 0,
+    "total_planned_electric_energy": 0,
+    "total_saved_electric_energy": 0,
+    "total_current_fuel_bill": 0,
+    "total_planned_fuel_bill": 0,
+    "total_saved_fuel_bill": 0,
+    "total_current_electric_bill": 0,
+    "total_planned_electric_bill": 0,
+    "total_saved_electric_bill": 0,
+    "total_current_energy_cons": 0,
+    "total_planned_energy_cons": 0,
+    "total_saved_energy_cons": 0,
+    "total_current_energy_bill": 0,
+    "total_planned_energy_bill": 0,
+    "total_saved_energy_bill": 0,
+    "total_current_heating_energy_loss": 0,
+    "total_planned_heating_energy_loss": 0,
+    "total_saved_heating_energy_loss": 0,
+    "total_current_dhw_energy_loss": 0,
+    "total_planned_dhw_energy_loss": 0,
+    "total_saved_dhw_energy_loss": 0,
+    "total_current_energy_loss": 0,
+    "total_planned_energy_loss": 0,
+    "total_saved_energy_loss": 0
+  },
+  "financial_values": {
+    "qNPV": {"from_zero_to_vita": 0},
+    "LabPI": 0,
+    "DPBP": 0
+  },
+  "benefits": {
+    "project_rating": 0,
+    "project_benefit": 0
+  },
+  "monte_carlo_values": {
+    "energy_saving": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        },
+    "bill_savings": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        },
+    "intervention_cost": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        }
+  },
+  "van_mc_values": {
+    "qNPV": {"from_zero_to_vita": 0},
+    "cb+": {"from_zero_to_vita": 0},
+    "cb-": {"from_zero_to_vita": 0},
+    "npv": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        },
+    "irr": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        },
+    "dpbp": {
+      "value": 0,
+      "conf_bound": 0,
+      "value_at_risk": 0,
+      "cond_value_at_risk": 0
+        }
+  },
+  "vita": 30
+}

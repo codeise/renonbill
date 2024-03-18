@@ -1,0 +1,36 @@
+fixedcost(irec, Edisp, fixedinvesth, fixedinvestD)
+irec = index of selected record
+Edisp  = This variable is calculated in costifissi. It is the total amount of heat transfer of case - (internal heat source + solar radiation)
+fixedinvesth = total amount of investment money that needed for heating system
+fixedinvestD = total amount of investment money that needed for DHW system
+
+Function starts with taking data from parMat and etc.
+Then they calculate a DHW_Vol value and hard code a variable named Mh2o. Mh2o is a pressure unit and used at plumbing.
+After that function calculates UisolW_, Uisolr_ and Uisolf_ These 3 values are ratio of envelope conductiviy divided by thicknes for walls, roof and floor of case
+
+Function keeps going with calculating Pgen_, Pgen, PgenHP_, PgenHP and Ssun. These are some deep calculated values and depends on Edisp heavily.
+Next, PgenDHW, EDHW and SsunDHW are calculated. M2ho and a hard coded global constant cpWater is used.
+After that function calculates some values like Vol_(volume of one building) Stot_(Total surface area of one building) Slat_(Lateral area of one building) Swin_(Total window area of one building)
+
+WARNING!!! They assign Sfloor_ to both Sr_ and Sf_ even they comment Sroof near Sr_. It is also weird that they assign same value to 2 different variables
+They also assign Slat_ to Sw_
+
+Function takes all values from parMATFIX and put them into unitarycosts array
+
+Function compares current and planned heating-burner type options and if there is a change, they calculate its cost
+Next, they check current and planned heating emmision and if there is a change, they calculate its cost
+
+AFter that, they check if current solar perc value is entered by user, if not they assign 0 to it.
+Then they check if there will be solar heating in planned building. If there is, they calculate its cost using current and planned solar perc
+
+Next they cehck if there is a change on DHW system and make calculations similar to heating part. 
+After this, they check ,if planned building will use solar system for DHW and calculate its value as well
+
+Next thing is checking for changes at insulation for walls, roof and floor and calculating their costs
+
+Function checks if there is a change on thermal transmittance of windows and ratio of windows to surface. Since surface are is fixed, this means a new window added or current windows changed.
+They calculate window cost if there is a change
+
+Next, they seperate the costs of heating and DHW and assigning them into fixedinvesth and fixedinvestD
+
+Last part is writing values into myReport

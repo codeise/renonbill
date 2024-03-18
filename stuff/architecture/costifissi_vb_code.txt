@@ -1,0 +1,638 @@
+  Select Case noiseflag
+  Case 1   'gaussian, unbiased,1, 1.96,2.58 (68%,95%,99%)
+    s = conf95 / 1.96
+    rumore = (Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd + Rnd - 6) * s
+  Case 2 'triangular
+    s = conf95 / 1.9
+    rumore = (Rnd + Rnd - 1) * s * Sqr(6)
+  Case 3 'rectangular
+    s = conf95 / 1.645
+    rumore = (2 * Rnd - 1) * s * Sqr(3)
+  End Select
+
+
+etac_ = 0.6
+chi_ = MIN(0.75 * HPCOP_ / 3.5, 1 / etac_)
+DHWchi_ = MIN(0.75 * HPDHWCOP_ / 3.5, 1 / etac_)
+
+
+DTeva_ = 10
+DTcond_ = 15
+
+DHWDTeva_ = 12
+DHWDTcond_ = 6
+
+
+HPCOPR_ = chi_ * etac_ * (Text_ + 273 + DTeva_) / (Tbase - Text_ + DTeva_ + DTcond_)
+HPDHWCOPR_ = DHWchi_ * etac_ * (Text_ + 273 + DHWDTeva_) / (50 - Text_ + DHWDTeva_ + DHWDTcond_)
+
+
+' hp case management
+If curflag = 0 Then
+ heatingflag = Record(irec, 30)
+Else
+ heatingflag = Record(irec, 40)
+End If
+
+
+
+Select Case heatingflag
+Case 1 'burner
+    eta_genp = eta_gen
+    eta_genf = eta_gen
+    eta_gene = 1000000000000#
+Case 2 ' pellet
+    eta_genp = eta_pellet '
+    eta_genf = eta_pellet
+    eta_gene = 1000000000000#
+Case 3 'heat pump
+    eta_genp = HPCOPR_ * conversion_
+    eta_genf = 1000000000000#
+    eta_gene = HPCOPR_
+End Select
+
+eta_p = eta_regul * eta_distr * eta_genp * eta_emit / (1 - solarfraction)
+'eta_h = eta_regul * eta_distr * eta_genh * eta_emit / (1 - solarfraction)
+eta_f = eta_regul * eta_distr * eta_genf * eta_emit / (1 - solarfraction)
+eta_e = eta_regul * eta_distr * eta_gene * eta_emit / (1 - solarfraction)
+eta_s = eta_distr * eta_emit / solarfraction
+
+
+
+
+' hot water
+
+solarDHWfraction = parMat(39, curflag) + parMat(39, curflag + 2)
+etaDHW_gen = parMat(40, curflag) + parMat(40, curflag + 2)
+electricBoilerEff_ = parMat(41, curflag) + parMat(41, curflag + 2)
+'HPDHWCOPR_ = parMat(42, curflag) + parMat(42, curflag + 2)
+
+
+If curflag = 0 Then
+ heatingDHWflag = Record(irec, 50)
+Else
+ heatingDHWflag = Record(irec, 55)
+End If
+
+
+Select Case heatingDHWflag
+Case 0 'no specific device, uses heating gen
+    etaDHW_genp = eta_genp
+    etaDHW_genf = eta_genf
+    etaDHW_gene = eta_gene
+    solarDHWfraction = solarfraction
+Case 1 'elect boiler
+    etaDHW_genp = electricBoilerEff_ * conversion_
+    etaDHW_genf = 1000000000000#
+    etaDHW_gene = electricBoilerEff_
+Case 2
+    etaDHW_genp = etaDHW_gen
+    etaDHW_genf = etaDHW_gen
+    etaDHW_gene = 1000000000000#
+Case 3 'heat pump
+    etaDHW_genp = HPDHWCOPR_ * conversion_
+    etaDHW_genf = 1000000000000#
+    etaDHW_gene = HPDHWCOPR_
+End Select
+
+
+
+
+
+etaDHW_p = eta_distr * etaDHW_genp / (1 - solarDHWfraction)
+'etaDHW_h = etaDHW_genh / (1 - solarDHWfraction)
+etaDHW_f = eta_distr * etaDHW_genf / (1 - solarDHWfraction)
+etaDHW_e = eta_distr * etaDHW_gene / (1 - solarDHWfraction)
+etaDHW_s = eta_distr / solarDHWfraction
+
+
+'If heatingDHWflag = 0 Then
+   ' etaDHW_s = eta_distr / solarfraction
+'End If
+
+
+'################# also equipment cost
+' if heating and DHW of the same type use a single device
+' different calculation for autonomous and centralized
+' only planned device cost are considered and only if device is changed with respect to current solution
+
+
+
+Sroof = sfloor ' one floor
+Vol = sfloor * h * nfloor 'total
+Vol_risc = Vol
+
+'If buildtype = "multistorey" Then
+' Vol_risc = 0.9 * Vol ' volume riscaldato (eg. non si conta il vano scale)trovami
+'End If
+
+Snetta = sfloor * 0.85 'di un piano
+Vnetto = Snetta * (h - 0.3) 'one floor
+Stot = S_V * Vol_risc 'sup disperdente
+'needed lateral surface ' assuming S/V true global if multistorey or detached house 'and s/V for mid floor if apartment
+Call lateral(buildtype, position, sfloor, Stot, Slat)
+
+
+
+
+Swin = MIN(Swinratio * sfloor, Slat)
+Sw = Slat - Swin * nfloor
+
+'AirChangeRate = 0.011 * (0.04 * Sfloor) 'un piano 'm^3/s formula da testare e magari rendere coeff modificabili
+Area = sfloor * ndw * nfloor 'commercial area
+ Gv = 0.011 * (0.04 * sfloor) * 3600 '[m3/h]
+ Gv2 = Airchangecoeff * Vnetto 'UNI  ts 11300-1 (da 0.3 a 0.5)
+
+'clear all
+qwin = 0: qsg = 0: qfloor = 0: qroof = 0: qv = 0: qw = 0: qis = 0: qDHW = 0
+'----
+
+        qv2 = nfloor * ndw * Gv * rhoAir * cpAir * HDD_ * 24 * 0.000001  ' un po' improprio
+        qv = nfloor * ndw * Gv2 * rhoAir * cpAir * HDD_ * 24 * 0.000001 ' nuovo modo
+        ' qis= internal sources
+        qis = nfloor * ndw * MIN(5.294 * (Snetta) - 0.01557 * (Snetta) ^ 2, 450) * TDAY_ * 3600 * 24 * 0.000001  'internal source J
+
+
+       'qwin= heat transfer through the windows
+        qwin = nfloor * Uwin * Swin * ndw * HDD_ * 3600 * 24 * 0.000001
+        ' contributo radiazione diretta attraverso finestre
+        qsg = nfloor * shadow * SunFactor * Swin * RAD_ * ndw * 1000000# * 0.000001 'throug wins
+
+        qs = shadow * alfa * Sw * RAD_ * ndw * 1000000# * 0.000001
+        'qw= heat transfer through the external walls
+        qw = Uw * Sw * ndw * HDD_ * 3600 * 24 * 0.000001 - Uw / he * qs
+
+
+
+        If buildtype = "multistorey" Then
+            qfloor = Ufloor * sfloor * ndw * HDD_ * 3600 * 24 * 0.000001
+            qsroof = shadow * RAD_ * alfa * Sroof * ndw * 1000000# * 0.000001 ' on the roof
+            qroof = Uroof * Sroof * ndw * HDD_ * 3600 * 24 * 0.000001 - Uroof / he * qsroof    '  - perchè entra
+        ElseIf buildtype = "detached house" Then
+            qfloor = Ufloor * sfloor * ndw * HDD_ * 3600 * 24 * 0.000001
+            qsroof = shadow * RAD_ * alfa * Sroof * ndw * 1000000# * 0.000001 ' on the roof
+            qroof = Uroof * Sroof * ndw * HDD_ * 3600 * 24 * 0.000001 - Uroof / he * qsroof
+        'ElseIf buildtype = "apartment (top floor)" Or (Left(buildtype, 9) = "apartment" And position = "top") Then
+        ElseIf (Left(buildtype, 9) = "apartment" And position = "top") Then
+            qsroof = shadow * RAD_ * alfa * Sroof * ndw * 1000000# * 0.000001 ' on the roof
+            qroof = Uroof * Sroof * ndw * HDD_ * 3600 * 24 * 0.000001 - Uroof / he * qsroof    '  - perchè entra
+
+        'ElseIf buildtype = "apartment (ground floor)" Or (Left(buildtype, 9) = "apartment" And position = "ground") Then
+        ElseIf (Left(buildtype, 9) = "apartment" And position = "ground") Then
+            qfloor = Ufloor * sfloor * ndw * HDD_ * 3600 * 24 * 0.000001
+        End If
+        'H [W/K]
+
+        Hw = qw * 1000000# / (HDD_ * ndw * 3600 * 24)
+        Hwin = qwin * 1000000# / (HDD_ * ndw * 3600 * 24)
+        Hv = qv * 1000000# / (HDD_ * ndw * 3600 * 24)
+        Hv2 = qv2 * 1000000# / (HDD_ * ndw * 3600 * 24)
+        '#################
+        ' hot water :4 persons per 100 mq, 30kg/person /day
+        qDHW = nfloor * ndw * (0.04 * sfloor) * DHWload * cpWater * (45 - 15) * 365 * 0.000001 ' massflow [kg/day]*dh*days/1e6  [MJ]
+
+
+
+Sub costifissi() 'all the project all the items
+
+' la costifissi è chiamata per ogni run monteCarlo e scorre i record
+Dim year As Integer
+Dim irecord As Integer, i As Integer
+' index 0 for current, index 0 for planned
+If nrec = 0 Then Exit Sub
+
+
+
+ReDim quickVAN(nrec), quickVANm2(nrec), quickirr(nrec), quickpayb(nrec), quickPI(nrec), quickFIXED(nrec)
+
+
+ReDim qNPV_(vita, 2)
+ReDim costifissisel(nrec), costiloanbonus(nrec)
+
+
+ReDim CurrEnergyfuel(nrec), PlanEnergyfuel(nrec), SavEnergyfuel(nrec)
+ReDim CurrEnergyele(nrec), PlanEnergyele(nrec), SavEnergyele(nrec)
+ReDim CurrBillfuel(nrec), PlanBillfuel(nrec), SavBillfuel(nrec)
+ReDim CurrBillele(nrec), PlanBillele(nrec), SavBillele(nrec)
+
+ReDim CurrEnergylossHeat(nrec), PlanEnergylossHeat(nrec), SavEnergylossHeat(nrec)
+ReDim CurrEnergylossDHW(nrec), PlanEnergylossDHW(nrec), SavEnergylossDHW(nrec)
+
+
+' clear all
+'energies
+'Dim qis(1, 100), qv(1, 100), qw(1, 100), qwin(1, 100), qsg(1, 100), qfloor(1, 100), qroof(1, 100), qDHW(1, 100) 'when added they give q_d
+'Dim q_d(1, 100), q_p(1, 100), q_f(1, 100), q_e(1, 100), q_s(1, 100)
+'Dim qDHW_d(1, 100), qDHW_p(1, 100), qDHW_f(1, 100), qDHW_e(1, 100), qDHW_s(1, 100) ' hot water
+
+'var cost
+Dim VC_f(1, 100), VC_e(1, 100)
+Dim VCDHW_f(1, 100), VCDHW_e(1, 100)
+Dim FIXC(100), FIXCDHW(100), investHEAT, investDHW
+
+'clear all
+' summed quantities
+Dim selFloArea(1)
+Dim sqis(1), sqv(1), sqw(1), sqwin(1), sqsg(1), sqfloor(1), sqroof(1)
+Dim sq_d(1), sq_p(1), sq_f(1), sq_e(1), sq_s(1)  ' added over records
+Dim sqDHW_d(1), sqDHW_p(1), sqDHW_f(1), sqDHW_e(1), sqDHW_s(1) ' hot wate, added over records
+' costs
+Dim sVC_f(1), sVC_e(1)
+Dim sVCDHW_f(1), sVCDHW_e(1)
+Dim sFixC, sFixCDHW
+
+
+'selected quantities
+Dim selqis(1), selqv(1), selqw(1), selqwin(1), selqsg(1), selqfloor(1), selqroof(1), selqDHW(1)
+Dim selq_d(1), selq_p(1), selq_f(1), selq_e(1), selq_s(1) ' selected
+Dim selqDHW_d(1), selqDHW_p(1), selqDHW_h(1), selqDHW_f(1), selqDHW_e(1), selqDHW_s(1) ' selected, hot water
+' var cost and fixed one
+Dim selVC_f(1), selVC_p(1), selVC_e(1)
+Dim selVCDHW_f(1), selVCDHW_p(1), selVCDHW_e(1)
+Dim selFixC, selFixCDHW
+
+Dim Uiw1, Uiw2, Uir1, Uir2, Uw1, Uw2, Uroof1, Uroof2
+
+'Dim S_V
+Dim q_dpass, qDHW_dpass
+Dim firstrec As Integer, lastrec As Integer
+Dim heatingflag, heatingDHWflag, pellet
+Dim icur, esaved
+
+flag = False
+
+'AirchangeRate = 0.3 / 3600 '(volumi al secondo)
+' da correggere per spifferi in case vecchie
+' cambi aria 0.011m3/s per persona, nei servizi 4 volumi/h
+' ab civili tipiche 0.04 persone /m2
+'allora
+'AirchangeRate = 0.011 * 0.04 *Sfloor ' 1.6 ricambi orari
+
+
+'If montecarlo = 1 Then irun = irun + 1
+
+selrec = form0.selectedrecord(form0.ListBox1, xflag) ' selected case
+
+
+
+If xflag = 0 Then Error 11
+
+TotArea = 0
+parMat(0, 0) = 0 ' do not remove or parmat is not  true public
+Dim time0, time1, time2, time3
+
+
+
+   lastrec = nrec
+   firstrec = 1
+
+
+ReDim ProjTarget(nrec, 15)
+
+Dim loan, bonus, costifissitotaliloanbonus
+
+
+
+   If form0.Checkloan.Value Then
+      loan = MIN(form0.TextLoan.Value / 100, 1)
+      
+   Else
+      loan = 0
+   End If
+   myReport.Checkloan = form0.Checkloan.Value
+   
+   If form0.CheckBonus.Value Then
+      myReport.TaxIncentive = MIN(form0.TextBonus.Value / 100, 1)
+   End If
+   
+   If form0.CheckBonus.Value And form0.TextRefund.Value = 0 Then
+      bonus = MIN(form0.TextBonus.Value / 100, 1) 'serve solo per sottrarlo ai fixed cost quando refundtime =0 (refund alla cassa)
+      
+   Else
+      bonus = 0
+   End If
+   myReport.CheckBonus = form0.CheckBonus.Value
+
+
+
+For irecord = firstrec To lastrec ' qui i scorre sui record ' ad esempio i costi fuel non devono variare fra recor e record
+        Call CountryCity(irecord, country_index, city_index) ' compute  indices to retrieve values from data arrays
+
+        ' for each record calculation is based on the following primitive parameters
+        ' when needed for two configurations: current and planned
+        ' so we build a double vector(parmat(20,1)[0 current, 1 planned] and test for it working
+        
+        'Uw, Uroof, Ufloor, Stot, Sfloor, S_V, h
+        'Uwin, Swinratio
+        'kW,thickwW,kR,thickR
+        ' HDD,RAD,Tday
+        ' we need a routine to read them from record to ParMat
+       
+        
+        
+        
+        'time0 = T1000()
+         '
+        
+
+        Call writeparam(irecord)
+        Call readparam_VC
+        'Call readparam_VC
+        'time2 = T1000
+        For icur = 0 To 1 'indice corrente/planned
+                      
+                      ' pellet case management
+                 If icur = 0 Then
+                    heatingflag = Record(irecord, 30)
+                    heatingDHWflag = Record(irecord, 50)
+                 Else
+                    heatingflag = Record(irecord, 40)
+                    heatingDHWflag = Record(irecord, 55)
+                 End If
+                 pellet = 0
+                 If heatingflag = 2 Then pellet = 1
+              
+                      
+                      
+                 
+                
+                
+                Call dispersed_heat_MC(irecord, icur, selqwin(icur), selqsg(icur), selqfloor(icur), selqroof(icur), selqv(icur), selqw(icur), selqis(icur), selqDHW(icur), selFloArea(icur))
+                 Call readparam_eff(icur, irecord, eta_p(icur), eta_f(icur), eta_e(icur), eta_s(icur), etaDHW_p(icur), etaDHW_f(icur), etaDHW_e(icur), etaDHW_s(icur))
+                
+                selq_d(icur) = selqv(icur) + selqw(icur) + selqfloor(icur) + selqroof(icur) + selqwin(icur) - selqsg(icur) - selqis(icur)
+                
+                           
+                
+                
+                q_dpass = selq_d(icur)
+                selq_p(icur) = q_dpass / eta_p(icur) 'primary
+                'q_h(icur, irecord) = q_dpass / eta_h(icur) 'heating
+                selq_f(icur) = q_dpass / eta_f(icur) 'fuel
+                selq_e(icur) = q_dpass / eta_e(icur) 'electric
+                selq_s(icur) = q_dpass / eta_s(icur) 'solar
+                
+
+             
+              
+                
+                
+
+                selqDHW_d(icur) = selqDHW(icur)
+                qDHW_dpass = selqDHW_d(icur)
+                selqDHW_p(icur) = qDHW_dpass / etaDHW_p(icur)
+                'qDHW_h(icur, irecord) = qDHW_dpass / etaDHW_h(icur)
+                selqDHW_f(icur) = qDHW_dpass / etaDHW_f(icur)
+                selqDHW_e(icur) = qDHW_dpass / etaDHW_e(icur)
+                selqDHW_s(icur) = qDHW_dpass / etaDHW_s(icur)
+                
+
+                'myReport.energyloss(irecord, icur) = selq_d(icur) / 3.6
+                'myReport.energyfuel(irecord, icur) = selq_f(icur) / 3.6
+                'myReport.energyelec(irecord, icur) = selq_e(icur) / 3.6
+                'myReport.energysol(irecord, icur) = selq_s(icur) / 3.6
+                
+                'myReport.dhwenergyloss(irecord, icur) = selqDHW_d(icur) / 3.6
+                'myReport.dhwenergyfuel(irecord, icur) = selqDHW_f(icur) / 3.6
+                'myReport.dhwenergyelec(irecord, icur) = selqDHW_e(icur) / 3.6
+                'myReport.dhwenergysol(irecord, icur) = selqDHW_s(icur) / 3.6
+        Next icur
+        
+        
+        
+        
+        
+        
+        
+        'costi fissi
+        Call fixedcost(irecord, selq_d(1), investHEAT, investDHW)
+        
+        FIXC(irecord) = investHEAT
+        sFixC = sFixC + FIXC(irecord)
+        FIXCDHW(irecord) = investDHW
+        sFixCDHW = sFixCDHW + FIXCDHW(irecord)
+        
+        costifissisel(irecord) = FIXC(irecord) + FIXCDHW(irecord)
+        
+        For year = 0 To vita
+
+          For icur = 0 To 1
+                 If icur = 0 Then
+                    heatingflag = Record(irecord, 30)
+                    heatingDHWflag = Record(irecord, 50)
+                 Else
+                    heatingflag = Record(irecord, 40)
+                    heatingDHWflag = Record(irecord, 55)
+                 End If
+                 pellet = 0
+                 If heatingflag = 2 Then pellet = 1
+        
+                ' variable cost
+                
+                selVC_f(icur) = selq_f(icur) * FuelCosts0(country_index, year)
+                If pellet = 1 Then selVC_f(icur) = selq_f(icur) * PelletCosts0(country_index, year)
+                selVC_e(icur) = selq_e(icur) * ElecCosts0(country_index, year)
+                
+                
+                
+                selVCDHW_f(icur) = selqDHW_f(icur) * FuelCosts0(country_index, year)
+                If pellet = 1 And heatingDHWflag = 0 Then ' no dedicated system and pellet heating
+                    selVCDHW_f(icur) = selqDHW_f(icur) * PelletCosts0(country_index, year) ' pellet  dhw
+                End If
+                selVCDHW_e(icur) = selqDHW_e(icur) * ElecCosts0(country_index, year)
+                
+
+          Next icur
+           
+        Call quickNPV(year, VetS(selVC_f, selVCDHW_f), VetS(selVC_e, selVCDHW_e), investHEAT + investDHW, quickVAN(irecord), quickirr(irecord), quickpayb(irecord), qNPV_)
+           
+        Next year
+        
+        CurrEnergyfuel(irecord) = selq_f(0) + selqDHW_f(0)
+        PlanEnergyfuel(irecord) = selq_f(1) + selqDHW_f(1)
+        SavEnergyfuel(irecord) = CurrEnergyfuel(irecord) - PlanEnergyfuel(irecord)
+        
+        CurrBillfuel(irecord) = selVC_f(0) + selVCDHW_f(0)
+        PlanBillfuel(irecord) = selVC_f(1) + selVCDHW_f(1)
+        SavBillfuel(irecord) = CurrBillfuel(irecord) - PlanBillfuel(irecord)
+        
+        CurrEnergyele(irecord) = selq_e(0) + selqDHW_e(0)
+        PlanEnergyele(irecord) = selq_e(1) + selqDHW_e(1)
+        SavEnergyele(irecord) = CurrEnergyele(irecord) - PlanEnergyele(irecord)
+        
+        CurrBillele(irecord) = selVC_e(0) + selVCDHW_e(0)
+        PlanBillele(irecord) = selVC_e(1) + selVCDHW_e(1)
+        SavBillele(irecord) = CurrBillele(irecord) - PlanBillele(irecord)
+        
+        
+        
+        CurrEnergylossHeat(irecord) = selq_d(0)
+        PlanEnergylossHeat(irecord) = selq_d(1)
+        SavEnergylossHeat(irecord) = CurrEnergylossHeat(irecord) - PlanEnergylossHeat(irecord)
+        
+        CurrEnergylossDHW(irecord) = selqDHW_d(0)
+        PlanEnergylossDHW(irecord) = selqDHW_d(1)
+        SavEnergylossDHW(irecord) = CurrEnergylossDHW(irecord) - PlanEnergylossDHW(irecord)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        costiloanbonus(irecord) = costifissisel(irecord) * (1 - loan - bonus)
+        
+        quickVANm2(irecord) = quickVAN(irecord) / selFloArea(0)
+        If costiloanbonus(irecord) <> 0 Then
+        quickPI(irecord) = 1 + quickVAN(irecord) / costiloanbonus(irecord)
+        Else
+        quickPI(irecord) = "+oo"
+        End If
+        
+        esaved = -(selq_f(1) - selq_f(0) + selqDHW_f(1) - selqDHW_f(0) + selq_e(1) - selq_e(0) + selqDHW_e(1) - selqDHW_e(0))
+        
+        ProjTarget(irecord, 1) = costifissisel(irecord)
+        ProjTarget(irecord, 2) = costiloanbonus(irecord)
+        ProjTarget(irecord, 3) = Round(quickVAN(irecord), 1)
+        ProjTarget(irecord, 4) = Round(quickVANm2(irecord), 3)
+        ProjTarget(irecord, 5) = Round(quickirr(irecord), 3) * 100
+        ProjTarget(irecord, 6) = Round(quickirr(irecord) - Record(irecord, 20), 3) * 100
+        ProjTarget(irecord, 7) = Round(Record(irecord, 20), 3) * 100
+        If quickPI(irecord) <> "+oo" Then
+         ProjTarget(irecord, 8) = Round(quickPI(irecord), 3)
+        Else
+         ProjTarget(irecord, 8) = quickPI(irecord)
+        End If
+        ProjTarget(irecord, 9) = Round(quickpayb(irecord), 1)
+       
+        'ProjTarget(irecord, 10) = SavEnergy(irecord) / CurrEnergy(irecord)
+        'ProjTarget(irecord, 11) = SavBill(irecord) / CurrBill(irecord)
+        
+Next irecord
+
+       
+             costifissitotali = sFixC + sFixCDHW
+             costifissitotaliloanbonus = costifissitotali * (1 - loan) ' - bonus)
+
+
+Dim CurrEnergyfuel_, PlanEnergyfuel_, SavEnergyfuel_
+Dim CurrEnergyele_, PlanEnergyele_, SavEnergyele_
+Dim CurrBillfuel_, PlanBillfuel_, SavBillfuel_
+Dim CurrBillele_, PlanBillele_, SavBillele_
+
+Dim CurrEnergylossHeat_, PlanEnergylossHeat_, SavEnergylossHeat_
+Dim CurrEnergylossDHW_, PlanEnergylossDHW_, SavEnergylossDHW_
+
+
+
+For i = 1 To nrec
+   CurrEnergyfuel_ = CurrEnergyfuel_ + CurrEnergyfuel(i)
+   PlanEnergyfuel_ = PlanEnergyfuel_ + PlanEnergyfuel(i)
+   SavEnergyfuel_ = SavEnergyfuel_ + SavEnergyfuel(i)
+
+   CurrBillfuel_ = CurrBillfuel_ + CurrBillfuel(i)
+   PlanBillfuel_ = PlanBillfuel_ + PlanBillfuel(i)
+   SavBillfuel_ = SavBillfuel_ + SavBillfuel(i)
+
+   CurrEnergyele_ = CurrEnergyele_ + CurrEnergyele(i)
+   PlanEnergyele_ = PlanEnergyele_ + PlanEnergyele(i)
+   SavEnergyele_ = SavEnergyele_ + SavEnergyele(i)
+
+   CurrBillele_ = CurrBillele_ + CurrBillele(i)
+   PlanBillele_ = PlanBillele_ + PlanBillele(i)
+   SavBillele_ = SavBillele_ + SavBillele(i)
+   
+   '________
+   
+   CurrEnergylossHeat_ = CurrEnergylossHeat_ + CurrEnergylossHeat(i)
+   PlanEnergylossHeat_ = PlanEnergylossHeat_ + PlanEnergylossHeat(i)
+   SavEnergylossHeat_ = SavEnergylossHeat_ + SavEnergylossHeat(i)
+   
+   CurrEnergylossDHW_ = CurrEnergylossDHW_ + CurrEnergylossDHW(i)
+   PlanEnergylossDHW_ = PlanEnergylossDHW_ + PlanEnergylossDHW(i)
+   SavEnergylossDHW_ = SavEnergylossDHW_ + SavEnergylossDHW(i)
+   
+   
+   
+myReport.CurrEnergyfuel(i) = CurrEnergyfuel(i) / 3.6
+myReport.PlanEnergyfuel(i) = PlanEnergyfuel(i) / 3.6
+myReport.SavEnergyfuel(i) = SavEnergyfuel(i) / 3.6
+
+myReport.CurrBillfuel(i) = CurrBillfuel(i)
+myReport.PlanBillfuel(i) = PlanBillfuel(i)
+myReport.SavBillfuel(i) = SavBillfuel(i)
+
+myReport.CurrEnergyele(i) = CurrEnergyele(i) / 3.6
+myReport.PlanEnergyele(i) = PlanEnergyele(i) / 3.6
+myReport.SavEnergyele(i) = SavEnergyele(i) / 3.6
+
+myReport.CurrBillele(i) = CurrBillele(i)
+myReport.PlanBillele(i) = PlanBillele(i)
+myReport.SavBillele(i) = SavBillele(i)
+  '________
+myReport.CurrEnergylossHeat(i) = CurrEnergylossHeat(i) / 3.6
+myReport.PlanEnergylossHeat(i) = PlanEnergylossHeat(i) / 3.6
+myReport.SavEnergylossHeat(i) = SavEnergylossHeat(i) / 3.6
+   
+myReport.CurrEnergylossDHW(i) = CurrEnergylossDHW(i) / 3.6
+myReport.PlanEnergylossDHW(i) = PlanEnergylossDHW(i) / 3.6
+myReport.SavEnergylossDHW(i) = SavEnergylossDHW(i) / 3.6
+   
+   
+   
+Next
+
+myReport.CurrEnergyfuel_ = CurrEnergyfuel_ / 3.6
+myReport.PlanEnergyfuel_ = PlanEnergyfuel_ / 3.6
+myReport.SavEnergyfuel_ = SavEnergyfuel_ / 3.6
+
+myReport.CurrBillfuel_ = CurrBillfuel_
+myReport.PlanBillfuel_ = PlanBillfuel_
+myReport.SavBillfuel_ = SavBillfuel_
+
+myReport.CurrEnergyele_ = CurrEnergyele_ / 3.6
+myReport.PlanEnergyele_ = PlanEnergyele_ / 3.6
+myReport.SavEnergyele_ = SavEnergyele_ / 3.6
+
+myReport.CurrBillele_ = CurrBillele_
+myReport.PlanBillele_ = PlanBillele_
+myReport.SavBillele_ = SavBillele_
+
+'_________________________________________
+myReport.CurrEnergylossHeat_ = CurrEnergylossHeat_ / 3.6
+myReport.PlanEnergylossHeat_ = PlanEnergylossHeat_ / 3.6
+myReport.SavEnergylossHeat_ = SavEnergylossHeat_ / 3.6
+   
+myReport.CurrEnergylossDHW_ = CurrEnergylossDHW_ / 3.6
+myReport.PlanEnergylossDHW_ = PlanEnergylossDHW_ / 3.6
+myReport.SavEnergylossDHW_ = SavEnergylossDHW_ / 3.6
+
+
+'____________________________________________
+myReport.vita = vita
+myReport.investment = costifissitotali
+myReport.investmentloan = costifissitotaliloanbonus
+
+
+myReport.loan = loan
+myReport.loanRefundTime = form0.Textloanyears.Value
+myReport.loanRate = form0.Textloanrate.Value
+
+
+
+myReport.TaxRefundTime = form0.TextRefund.Value
+
+
+
+
+'FlagChanges = False 'check for existent interventions
+'FlagchangesDHW = False 'check for existent interventions
+'If sVC_f(0) <> sVC_f(1) Or sVC_e(0) <> sVC_e(1) Then FlagChanges = True
+'If sVCDHW_f(0) <> sVCDHW_f(1) Or sVCDHW_e(0) <> sVCDHW_e(1) Then FlagchangesDHW = True
+
+
+End Sub

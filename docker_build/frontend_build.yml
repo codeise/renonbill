@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  frontend_build:
+    build: ./frontend_build
+    command: tail -f /dev/null
+    volumes:
+      - ./backend/code:/code
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development

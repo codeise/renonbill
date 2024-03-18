@@ -1,0 +1,11 @@
+manuel_cost_check, manual_inserted_costs, Epsav values(minEpsav, maxEpsav, weightEpsav) and "end analysis data" are empty why?
+What is jsel in consumi?
+What is the difference between consumi and costifissi.
+Consumi calls all functions called by costifissi with some extra calculations. So, why do we need costifissi at all?
+In consumi, why we are filling selection array with jsel? Isn't jsel integer?
+Why when variable cost are calculated, Values of year 1 is used at year 0. And at year 1 again year 1 values are used
+When we enter a case that we dont use a certain type of resource(fuel or electricity), monte carlo graphs turns out to a
+single bar at the middle. Is it an expected output
+When we click after loading a case, It gives wrong results because vita is still default one (20). When we click again it gets fixed
+Why npv_mv works always with last case? we use discount rate in irrmc function which is always the last one
+In eocnomic_module line 65, n95 = Int(nrun * 0.95 + 0.5) is assigning wrong value into n95 It should be Round instead of Int

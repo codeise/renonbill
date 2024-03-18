@@ -1,0 +1,51 @@
+VAN = NPV in Italian
+
+quickNPV(year, VC_f, VC_e, FIXC, Qvan, Qirr, QPB, NPV)
+year = current year that NPV will be calculated
+VC_f = Total amount of fuel costs for that year. This variable includes bot heating and DHW
+VC_e = Total amount of electric costs for that year. This variable includes bot heating and DHW
+FIXC = Total fixed investment needed for case
+Qvan = quick VAN (VAN means npv)
+Qirr = quick IRR (internal rate of return)
+QPB = quick payback. Probably "discounted payback period"
+NPV = Net present value
+
+Function starts checking if current year is 0
+	If that condition is true, then function assigns FIXC into a variable named fixc0
+	Then function checks if we are taking bonus
+		If we are taking bonus, function gets its amount and return time
+			If return time is not 0, Then we calculate a variable named rata0
+	If we are not taking bonus, then both rata0 and bonus are 0
+
+	Next, fucntion checks if we are taking loan
+		If we are, then it gets loanyrs, loan amount, loan rate and calculates Rataloan0
+	Else loan and Rataloan0 is 0
+	We assign 0 to flagpb and flagdpb then 1 to tasso_integrale here.
+	Next, we check if returntime is 0, then we assigin same value into van_mc(0), van_MCPB(0) and cashflow(0) according to condition
+
+If year is greater than 0
+	If year is greater than return time, we assign 0 to rata, otherwise we assign rata0 to rata
+	If year is greater than loanyrs, assign 0 to RATAloan. Otherwise, assign Rataloan0 to RATAloan
+	Next, function calculates cashflow(year) and tasso_integrale.(tasso integrale = full ratio, Tasso Sconto = discount rate)
+	TassoScontoMC takes the value of parMATDR
+	If tasso_integrale is not 0, then function calculates cashflowAtt(year) and van_mc(year)
+	Then function calculates van_MCPB(year)
+	If van_mc(year) is greater than 0 and van_mc(year-1) is 0 or less
+		QFB calculated and flagdpb is changed to 1
+	If van_MCPB(year) is greater than 0 and van_MCPB(year-1) is 0 or less, then we change flagpb to 1
+	
+	If year is vita
+		If flagdpb is 0 and van_mc(year) is different than van_mc(year-1)
+			QPB is calculated (NOTE: It looks same with the previous one)
+		(NOTE: They did nothing if flagpb is 0 so I did not write them)
+
+If year is vita
+	van_mc(year) is assgined to Qvan
+	IRR function called
+	from 0 to vita
+		values in van_mc is assigned to NPV(i, 0)
+
+		
+	
+
+

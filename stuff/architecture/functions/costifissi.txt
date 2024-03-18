@@ -1,0 +1,40 @@
+costifissi
+
+This function starts with checking if we take a loan or not, then they take percentage amount of loan. Note that function also validating that loan cant be greater than 1
+Then function making same thing for bonus as well. But this time function also checking if refund time is 0 as well.
+They assign 0 to each value, if their condition(s) are not satisfied
+
+After dealing loan and bonus, function starts a loop for iterating through cases.
+	First thing done in loop is calling CountryCity(). This function returns index of country and city
+	After that writeparam() and readparam_VC() is called. writeparam() isfilling parMAT arrays and readparam_VC() is copying parMatVC values into seperate arrays
+	
+	Next thing is they create another loop from 0 to 1. 0 means operations are done for current values, 1 is for planned values.
+		Inside this loop, function reads heating type and DHW type and also checks if we are using pellet stove
+		Next, dispersed_heat_MC() and readparam_eff() are called. These are important functions that returning variable that will be used
+		Using values we obtain from dispersed_heat_MC(), we calculate selq_d(icur). My guess is that this value is total heat that our case is losing from walls, windows etc. Function also adds heating that we get from sun etc.
+		Wİth calculated selq_d(icur) and efficiency values calculated at readparam_eff() function calculates selq for each fuel type
+		Next, same operations are done for DHW values as well
+	
+	After that loop, fixedcost() is called. That function returns total amount of money needed to make planned case happen for heating and DHW
+	Function uses values coming from fixedcost() and puts them into arrays, so we can have cost of each case both seperated and as total cost. 
+	Function also adds those values into 2 variables to hold total cost of project
+	
+	Function starts to another loop from 0 to time horizon
+		Since operations here needs to be done for both current and planned, Function puts another loop here
+			First thing is reading heating and DHW types and checking if we use pellet stove
+			After that for both heating and DHW they calculate total amount of fuel and electricty that will be used for current year. Function uses values that are inside data file, so no extra calculation needed for change at values for year
+			remeber their calculations changes if we are using pellet sotve
+		Then, function calls quickNPV() to calculate Net Present Value for current year
+	
+	After year loop, function calculates for current planned fuel usage, electric usage, fuel bill, electric bill, energy loss for heating and energy loss for DHW and how much will we save them for current case and puts it into array
+	
+	Next, function calculates total cost with loan and bonus using the value which we calculated after fixedcost() function.
+	After that, function calculates quickVANm2 and quickPI for current record
+	Then function calculates a variable named esaved. This variable is not used at costifissi but another function named consumi uses this
+	Function rounds and puts some variables into ana rray named ProjTarget. This array is used at other functions
+
+After that loop, function sums total cost values that are updated inside loop and applies loan calculation to it
+
+Function starts another loop from 1 to number of cases
+	Current, planned and saved fuel and electric usage, bills and energy loss for both heating and DHW are summed for all cases. This way we get total values for project
+	After that function puts some calculated values into a structure named myReport. This structure is used for exporting data

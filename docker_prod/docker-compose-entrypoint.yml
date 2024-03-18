@@ -1,0 +1,55 @@
+version: "3.8"
+
+networks:
+  renon_net:
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt
+
+services:
+  db:
+    image: postgres:13.2
+    tty: true
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/dumps:/dumps
+    secrets:
+      - db-password
+    ports:
+      - "54321:5432"
+    environment:
+      - POSTGRES_DATABASE=renonbill
+      - POSTGRES_USER=renonbill
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    networks:
+      - renon_net
+
+  backend:
+    build: backend_entrypoint
+    tty: true
+    secrets:
+      - db-password
+    volumes:
+      - ../backend/:/code
+    expose:
+      - 8000
+    networks:
+      - renon_net
+
+  frontend:
+    build: frontend
+    tty: true
+    volumes:
+      - ../frontend/:/code
+    expose:
+      - 3000
+    environment:
+      - VIRTUAL_HOST=renonbill.ikimio.com
+      - LETSENCRYPT_HOST=renonbill.ikimio.com
+      - LETSENCRYPT_EMAIL=borg@lappasoft.com
+    networks:
+      - renon_net

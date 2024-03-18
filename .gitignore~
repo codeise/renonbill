@@ -1,0 +1,3 @@
+docker/db/password.txt
+.idea/
+__pycache__/

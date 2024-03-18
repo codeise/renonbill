@@ -1,0 +1,35 @@
+version: '2'
+
+networks:
+  default:
+    external:
+      name: renonbill_renon_net
+
+services:
+  proxy:
+    container_name: proxy_proxy_1
+    image: jwilder/nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+      - ./dhparam:/etc/nginx/dhparam
+      - ./conf:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs
+      - ./params.conf:/etc/nginx/conf.d/params.conf
+      - ./vhost:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    expose:
+      - "9000"
+    ports:
+      - "80:80"
+      - "443:443"
+
+  letsencrypt:
+    container_name: letsencrypt_1
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./acme:/etc/acme.sh
+    volumes_from:
+      - proxy
+    environment:
+      - DEFAULT_EMAIL=borg@lappasoft.com

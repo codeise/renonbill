@@ -1,0 +1,40 @@
+IMPORTANT NOTE = eta is pronunciation of this greek letter "η" it means efficiency
+
+readparam_eff(curflag, irec, eta_p, eta_f, eta_e, eta_s, etaDHW_p, etaDHW_f, etaDHW_e, etaDHW_s)
+curflag = flag to define if i am calculating current or planned values 0 for current 1 for planned
+irec = index of current record
+eta_p = efficiency of pellet stove
+eta_f = efficiency of fuel heating
+eta_e = efficiency of electric heating
+eta_s = efficiency of solar heating
+etaDHW_p = efficiency of pellet stove on DHW
+etaDHW_f = efficiency of fuel heating on DHW
+etaDHW_e = efficiency of electric heating on DHW
+etaDHW_s = efficiency of solar heating on DHW
+
+Function starts with taking some values from parMat. These values are
+conversion_ = This value is taken as eta_conv(country_index), but all values inside this array is 0.5 parMat(29)
+eta_regul = "regulation: mean efficiency" from "Heating & DHW" sheet inside data file parMat(30)
+eta_distr = distribution: mean efficiency" from "Heating & DHW" sheet inside data file parMat(31)
+eta_emit = "efficiency" chosen from HEATING(emitter type) from "Heating & DHW" sheet. It changes according to type of heating option parMat(32)
+solarfraction = If there is a current/planned solar system for heating, this value is calculated from Record array, otherwise it is 1/1000000 parMat(33)
+eta_gen = "efficiency" chosen from HEATING(plant type) from "Heating & DHW" sheet. It changes according to type of heating option parMat(34)
+eta_pellet = "efficiency" of a pellet stove. This value is inside "Heating & DHW" under HEATING(plant type) parMat(35)
+HPCOP_ = "efficiency" of a heat pump. This value is inside "Heating & DHW" under HEATING(plant type). efficiency of a heat pump on heating. parMat(36)
+HPDHWCOP_ = "efficiency" of a heat pump. This value is inside "Heating & DHW" under plant type(hot water). parMat(42)
+
+Then they assign some value(hard coded) and calculate chi_ and DHWchi_ using these values
+Then they assign more values and using chi_ and DHWchi_ program calculates HPCOPR_ and HPDHWCOPR_ values
+
+After that, program takes current or planned heating option and calculates eta_genp, eta_genf and eta_gene.
+Values changes according to type (gen means generator, in other words heating)
+
+eta_p, eta_f, eta_e, eta_s are calculated with using eta_gen values
+
+function keeps with taking these values from parMat
+solarDHWfraction = current or planned solar perc value parMat(39)
+etaDHW_gen =  "efficiency" chosen from plant type (hot water) from "Heating & DHW" sheet. It changes according to type of DHW option parMat(40)
+electricBoilerEff_ = "efficiency" of electric boiler under plant type (hot water) from "Heating & DHW" sheet. parMat(41)
+
+function takes current or planned DHW option and calculates etaDHW_genp, etaDHW_genf, etaDHW_gene and solarDHWfraction according to DHW type
+Lastly, calculates etaDHW_p, etaDHW_f, etaDHW_e and etaDHW_s using etaDHW_gen values

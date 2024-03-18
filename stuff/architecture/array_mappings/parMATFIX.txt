@@ -1,0 +1,32 @@
+parMATFIX holds cost values of systems. Values always written to (x, 1)th index
+
+heater_count = Number of options under HEATING (plant type) in Heating and DHW sheet (6 for our default data)
+emitter_count = Number of options under HEATING (emitter type) in Heating and DHW sheet (6 for our default data)
+dhw_count = Number of options under plant type (hot water) in Heating and DHW sheet (2 for our default data)
+
+from parMATFIX(1) to heater_count
+they assign cost + installation cost of heating types
+
+parMATFIX(heater_count + 1) = cost + installation cost of pellet stove under HEATING (plant type)
+parMATFIX(heater_count + 2) = cost + installation cost of heat pump under HEATING (plant type)
+
+from  parMATFIX(heater_count + 3) to heater_count + emitter_count + 2
+they assign cost + installation cost of emitter types
+
+parMATFIX(heater_count + emitter_count + 3) = cost + installation cost of solar heating under HEATING (plant type)
+parMATFIX(heater_count + emitter_count + 4) = cost + installation cost of electric boiler under plant type (hot water)
+
+from  parMATFIX(heater_count + 5) to heater_count + emitter_count + dhw_count + 4
+they assign cost + installation cost of DHW types
+
+parMATFIX(heater_count + emitter_count + dhw_count + 5) = cost + installation cost of heat pump under plant type (hot water)
+parMATFIX(heater_count + emitter_count + dhw_count + 6) = cost + installation cost of solar heater under plant type (hot water)
+
+parMATFIX(heater_count + emitter_count + dhw_count + 7) = cost + installation cost of insulating m2 of wall
+parMATFIX(heater_count + emitter_count + dhw_count + 8) = cost + installation cost of insulating m2 of roof
+parMATFIX(heater_count + emitter_count + dhw_count + 9) = cost + installation cost of insulating m2 of floor
+These 3 values above are calculated using (material cost for 1m2) * ratio of thickness/envelope conductivity + installation cost for 1m2
+This means these values are only for 1m2. material cost and installation cost are taken from Envelope & Windows sheet
+
+parMATFIX(heater_count + emitter_count + dhw_count + 10) = Value of single grazed cost, €/m2 (all inclusive) in Envelope & Windows sheet
+parMATFIX(heater_count + emitter_count + dhw_count + 11) = Value of double grazed cost, €/m2 (all inclusive) in Envelope & Windows sheet

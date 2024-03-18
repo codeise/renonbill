@@ -1,0 +1,52 @@
+version: "3.8"
+
+networks:
+  backend-network:
+  frontend-network:
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt
+
+services:
+  db:
+    image: postgres:13.2
+    tty: true
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend-network
+    secrets:
+      - db-password
+    ports:
+      - "54321:5432"
+    environment:
+      - POSTGRES_DATABASE=renonbill
+      - POSTGRES_USER=renonbill
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+
+  backend:
+    build: backend_entrypoint
+    tty: true
+    secrets:
+      - db-password
+    networks:
+      - backend-network
+      - frontend-network
+    volumes:
+      - ../backend/:/code
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: frontend
+    tty: true
+    networks:
+      - frontend-network
+    volumes:
+      - ../frontend/:/code
+    ports:
+      - "80:3000"

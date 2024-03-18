@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "bootstrap": "4.6.0",
+    "npx": "^10.2.2",
+    "react-bootstrap": "^1.6.1",
+    "react-bootstrap-validation": "^0.1.11"
+  }
+}

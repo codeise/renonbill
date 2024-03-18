@@ -1,0 +1,13 @@
+0: Current values from UI
+1: Planned values from UI
+2: Current values from noise (monte_carlo)
+3: Planned values from noise (If value is fixed or no change between current and planned 2 and 3 are same ex: floor_area)
+4: Confidence value taken from user (Uncertanity_form or Monte Carlo Setup)
+5: True if we are noising this value in Monte Carlo Setup
+
+ output = {
+	curr: {} -> 2
+	plan: {} -> 3
+	confidence: {} -> 4
+	changed: {} -> 5
+}

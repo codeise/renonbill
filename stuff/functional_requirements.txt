@@ -1,0 +1,24 @@
+•	While adding a case, if we have a selected case from list, all input areas will have same value with selected case.
+
+•	When we add a case, program does not allow us to add a case from different countries. 
+
+•	BUG: We can merge cases from different countries using merge cases from a file. Example: If we add a case from Italy, and a file containing cases from Germany. We can merge cases from Germany, whenever we try to add a new case, country will be same with the country of selected case and will not be changeable.
+
+•	Program does not allow us to fill data with negative values or 0. Whenever we enter a negative value, program warns us with a red blink on invalid input area and stays at adding process, but when we write 0 program exits from adding data part without adding the case.
+
+•	When we do not select default option at thermal transmittance part, program opens data areas. Those areas are filled with default values initially.
+
+•	According to floor area and number of floors (only for multistorey buildings) program calculates a default S/V ratio and min S/V ratio. Program checks the S/V ratio entered and if user’s value is less than min value, then it warns user with showing min S/V value.
+
+•	Program initially selects “all dwellings” option. After an adding operation, if we have more than one cases, then program automatically switches to “selected dws.” option
+
+•	Delete Case button deletes all cases and restarts program.
+
+•	Sort and choose always sorts descending order and user can delete a selected case.
+
+•	On main page, for both heating and domestic hot water (DHW), program shows current and planned energy losses, fuel energy consumption, electric energy consumption and solar energy exploitation. Program also shows fuel and electric energy bills and total energy bill as well.
+
+•	For all values listed at previous clause, program also extracts planned values from current values to get savings values.
+
+•	Details button opens up a new window. Window shows current, planned and difference of heat transferred from walls, windows, floor, roof and ventilation. Internal heat source due to people and equipment and solar radiation across windows. Needed thermal energy, consumed fuel and electric energy for both heating and DHW.
+

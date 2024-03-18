@@ -1,0 +1,50 @@
+version: "3.8"
+
+networks:
+  backend-network:
+  frontend-network:
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt
+
+services:
+  db:
+    image: postgres:13.2
+    tty: true
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/dumps:/dumps
+    networks:
+      - backend-network
+    secrets:
+      - db-password
+    ports:
+      - "54321:5432"
+    environment:
+      - POSTGRES_DATABASE=renonbill
+      - POSTGRES_USER=renonbill
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+
+  backend:
+    build: backend
+    tty: true
+    secrets:
+      - db-password
+    networks:
+      - backend-network
+      - frontend-network
+    volumes:
+      - ../backend/:/code
+  frontend:
+    build: frontend
+    tty: true
+    networks:
+      - frontend-network
+    volumes:
+      - ../frontend/:/code
+    ports:
+      - "3000:3000"

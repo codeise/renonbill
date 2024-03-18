@@ -1,0 +1,59 @@
+dispersed_heat_MC(irec, curflag, qwin, qsg, qfloor, qroof, qv, qw, qis, qDHW, Area)
+
+irec = index of current record
+curflag = flag to define if i am calculating current or planned values 0 for current 1 for planned
+qwin = heat transfer thorugh windows
+qsg = total solar radiation passing through windows
+qfloor = heat transfer through floor
+qroof = heat transfer through roof
+qv = heat transfer beacuse of air exchange (ventilation)
+qw = heat transfer through walls
+qis
+qDHW = heat transfer on DHW
+Area = Floor area of current case
+
+Function starts taking values from readparam function and calculates 
+Vol = total volume of building
+Snetta = net surface area of one floor
+Vnetto = net volume of one floor
+Stot = total floor area of whole building
+
+After that they call a function named lateral. This function calculates the area of outer side for a floor. calculation changes according to type of building.
+Using the Slat(Surface area of total outer side) they calculate Swin(Total area of windows)
+Then since we know total outer area of a floor and windows in it, we calculate Sw(total area of outer walls for a building)
+Then they calculate
+Area = commercial area of building
+Gv = total air that is exchanged. Unit of this is m3 / hour
+Gv2 = again total air that is exchanged. But this time they use a fixed value from data file and Vnetto
+
+Then they calculate qv2 and qv. Difference of qv and qv2 is on qv Gv2, on qv2 Gv is used
+qis, qwin, qsg, qs and qw calculated seperately
+Then program calculates qfloor, qsroof and qroof. qsroof is value about the shadow inside the roof and it is used for calculation of qroof
+
+Now the program calculates H values. They say unit is W/K. closest thing I found on the internet is W/m2K which is "Thermal Permeability Coefficient"
+Thermal Permeability Coefficient is value for heat passed from two 1m2 plates when one of plate is 1C hotter which are 1m away from each other
+If this value is small, then we lose less heat.
+
+Lastly, program calculates qDHW. They assume 4 people living for 100m2 and each person is using 30kg for a day
+
+-----other variables-----
+sfloor = surface of a floor. from readparam
+nfloor = number of floors. from readparam
+uw = Wall thermal transmittance value. from readparam
+Uroof = Roof thermal transmittance. from readparam
+Ufloor = Floor thermal transmittance. from readparam
+S_V = ratio of surface area to volume. from readparam
+h = height of a floor. from readparam
+Uwin = Window thermal transmittance value. from readparam
+Swinratio_ = ratio of total window surfaces to floor surface
+HDD_ = HDD value taken from data file according to country and city
+RAD_ = Radiation value calculated for a city
+TDAY_ = number of days that heating used for a city
+ndw = number of dwellings
+he = a value that is hardcoded 23 in code
+shadow = value from sheet "other thermal data sheet" inside data file
+SunFactor = a value that is calculated according to heat transmittance of windows
+alfa = value from sheet "other thermal data sheet" inside data file
+Airchangecoeff = value from sheet "other thermal data sheet" inside data file
+DHWload = value from sheet "other thermal data sheet" inside data file
+Slat = calculated in lateral function from Stot and sfloor
